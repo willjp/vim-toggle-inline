@@ -3,7 +3,7 @@ Before (setup relevant ruby conventions):
   set softtabstop=2
 
 
-Given (un-indented/inlined ruby array):
+Given (un-indented/inlined ruby symbol-hash):
   foo = {a: 1, b: 2, c: 3}
 Execute (ToggleInline):
   :ToggleInline
@@ -15,7 +15,7 @@ Expect:
   }
 
 
-Given (un-indented/multiline ruby array):
+Given (un-indented/multiline ruby symbol-hash):
   foo = {
     a: 1,
     b: 2,
@@ -27,7 +27,7 @@ Expect:
   foo = {a: 1, b: 2, c: 3}
 
 
-Given (indented/inlined ruby array):
+Given (indented/inlined ruby symbol-hash):
   class Foo
     foo = {a: 1, b: 2, c: 3}
   end
@@ -43,7 +43,7 @@ Expect:
   end
 
 
-Given (indented/multiline ruby array):
+Given (indented/multiline ruby symbol-hash):
   class Foo
     foo = {
       a: 1,
@@ -56,4 +56,60 @@ Execute (ToggleInline):
 Expect:
   class Foo
     foo = {a: 1, b: 2, c: 3}
+  end
+
+
+Given (un-indented/inlined ruby arrow-hash):
+  foo = {"a" => 1, "b" => 2, "c" => 3}
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  foo = {
+    "a" => 1,
+    "b" => 2,
+    "c" => 3
+  }
+
+
+Given (un-indented/multiline ruby arrow-hash):
+  foo = {
+    "a" => 1,
+    "b" => 2,
+    "c" => 3
+  }
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  foo = {"a" => 1, "b" => 2, "c" => 3}
+
+
+Given (indented/inlined ruby arrow-hash):
+  class Foo
+    foo = {"a" => 1, "b" => 2, "c" => 3}
+  end
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  class Foo
+    foo = {
+      "a" => 1,
+      "b" => 2,
+      "c" => 3
+    }
+  end
+
+
+Given (indented/multiline ruby arrow-hash):
+  class Foo
+    foo = {
+      "a" => 1,
+      "b" => 2,
+      "c" => 3
+    }
+  end
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  class Foo
+    foo = {"a" => 1, "b" => 2, "c" => 3}
   end

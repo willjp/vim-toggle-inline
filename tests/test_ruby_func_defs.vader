@@ -12,12 +12,12 @@ Given (un-indented/multiline ruby func):
   )
 Execute (ToggleInline from before-params):
   :ToggleInline
-Expect (inlines function declaration, and removes trailing comma):
+Expect:
   def foo(a, b = nil, c: nil, d: bar())
 Execute (ToggleInline from middle-of-params):
   :3
   :ToggleInline
-Expect (inlines function declaration, and removes trailing comma):
+Expect:
   def foo(a, b = nil, c: nil, d: bar())
 
 
@@ -33,14 +33,14 @@ Given (indented/multiline ruby func):
 Execute (ToggleInline from before-params):
   :2
   :ToggleInline
-Expect (inlines function declaration, and removes trailing comma):
+Expect:
   class Foo
     def foo(a, b = nil, c: nil, d: bar())
   end
 Execute (ToggleInline from middle-of-params):
   :3
   :ToggleInline
-Expect (inlines function declaration, and removes trailing comma):
+Expect:
   class Foo
     def foo(a, b = nil, c: nil, d: bar())
   end
@@ -50,7 +50,7 @@ Given (un-indented/inline ruby func):
   def foo(a, b = nil, c: nil, d: bar())
 Execute (ToggleInline from cursor-column before params defined):
   :ToggleInline
-Expect (un-inlines function declaration):
+Expect:
   def foo(
     a,
     b = nil,
@@ -60,7 +60,7 @@ Expect (un-inlines function declaration):
 Execute (ToggleInline from cursor-column in middle of params definition):
   :call cursor(1, 12)
   :ToggleInline
-Expect (un-inlines function declaration):
+Expect:
   def foo(
     a,
     b = nil,
@@ -77,7 +77,7 @@ Execute (ToggleInline from cursor-column before params defined):
   :1
   :0
   :ToggleInline
-Expect (un-inlines function declaration):
+Expect:
   class Foo
     def foo(
       a,
@@ -89,7 +89,7 @@ Expect (un-inlines function declaration):
 Execute (ToggleInline from cursor-column in middle of params definition):
   :call cursor(1, 15)
   :ToggleInline
-Expect (un-inlines function declaration):
+Expect:
   class Foo
     def foo(
       a,
@@ -107,7 +107,7 @@ Given (indented/inline ruby func with a method modifier):
 Execute (ToggleInline):
   :call cursor(1, 0)
   :ToggleInline
-Expect (un-inlines function declaration, using indent of modifier):
+Expect:
   class Foo
     private def foo(
       a,
@@ -130,7 +130,7 @@ Given (indented/multiline ruby func with a method modifier):
 Execute (ToggleInline):
   :call cursor(2, 0)
   :ToggleInline
-Expect (un-inlines function declaration, using indent of modifier):
+Expect:
   class Foo
     private def foo(a, b = nil, c: nil, d: bar())
   end

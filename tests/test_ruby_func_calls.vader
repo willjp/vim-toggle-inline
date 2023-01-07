@@ -12,7 +12,7 @@ Given (un-indented/multiline ruby func call):
   )
 Execute (ToggleInline from before-params):
   :ToggleInline
-Expect (inlines function declaration, and removes trailing comma):
+Expect:
   foo(a, b = nil, c: nil, d: bar())
 
 
@@ -20,7 +20,7 @@ Given (un-indented/inline ruby func call):
   foo(a, b = nil, c: nil, d: bar())
 Execute (ToggleInline from before-params):
   :ToggleInline
-Expect (inlines function declaration, and removes trailing comma):
+Expect:
   foo(
     a,
     b = nil,
@@ -40,7 +40,7 @@ Given (indented/multiline ruby func call):
 Execute (ToggleInline):
   :call cursor(2, 0)
   :ToggleInline
-Expect (inlines function declaration):
+Expect:
   def bar(a: 1)
     foo(a, b = nil, c: nil, d: bar())
   end
@@ -53,7 +53,7 @@ Given (indented/inline ruby func call):
 Execute (ToggleInline):
   :call cursor(2, 0)
   :ToggleInline
-Expect (inlines function declaration):
+Expect:
   def bar(a: 1)
     foo(
       a,

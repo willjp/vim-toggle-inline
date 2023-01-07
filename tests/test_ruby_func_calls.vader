@@ -1,0 +1,64 @@
+Before (setup relevant ruby conventions):
+  set expandtab
+  set softtabstop=2
+
+
+Given (un-indented/multiline ruby func call):
+  foo(
+    a,
+    b = nil,
+    c: nil,
+    d: bar(),
+  )
+Execute (ToggleInline from before-params):
+  :ToggleInline
+Expect (inlines function declaration, and removes trailing comma):
+  foo(a, b = nil, c: nil, d: bar())
+
+
+Given (un-indented/inline ruby func call):
+  foo(a, b = nil, c: nil, d: bar())
+Execute (ToggleInline from before-params):
+  :ToggleInline
+Expect (inlines function declaration, and removes trailing comma):
+  foo(
+    a,
+    b = nil,
+    c: nil,
+    d: bar()
+  )
+
+Given (indented/multiline ruby func call):
+  def bar(a: 1)
+    foo(
+      a,
+      b = nil,
+      c: nil,
+      d: bar(),
+    )
+  end
+Execute (ToggleInline):
+  :call cursor(2, 0)
+  :ToggleInline
+Expect (inlines function declaration):
+  def bar(a: 1)
+    foo(a, b = nil, c: nil, d: bar())
+  end
+
+
+Given (indented/inline ruby func call):
+  def bar(a: 1)
+    foo(a, b = nil, c: nil, d: bar())
+  end
+Execute (ToggleInline):
+  :call cursor(2, 0)
+  :ToggleInline
+Expect (inlines function declaration):
+  def bar(a: 1)
+    foo(
+      a,
+      b = nil,
+      c: nil,
+      d: bar()
+    )
+  end

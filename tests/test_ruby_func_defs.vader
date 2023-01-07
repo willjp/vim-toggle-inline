@@ -1,0 +1,136 @@
+Before (setup relevant ruby conventions):
+  set expandtab
+  set softtabstop=2
+
+
+Given (un-indented/multiline ruby func):
+  def foo(
+    a,
+    b = nil,
+    c: nil,
+    d: bar(),
+  )
+Execute (ToggleInline from before-params):
+  :ToggleInline
+Expect (inlines function declaration, and removes trailing comma):
+  def foo(a, b = nil, c: nil, d: bar())
+Execute (ToggleInline from middle-of-params):
+  :3
+  :ToggleInline
+Expect (inlines function declaration, and removes trailing comma):
+  def foo(a, b = nil, c: nil, d: bar())
+
+
+Given (indented/multiline ruby func):
+  class Foo
+    def foo(
+      a,
+      b = nil,
+      c: nil,
+      d: bar(),
+    )
+  end
+Execute (ToggleInline from before-params):
+  :2
+  :ToggleInline
+Expect (inlines function declaration, and removes trailing comma):
+  class Foo
+    def foo(a, b = nil, c: nil, d: bar())
+  end
+Execute (ToggleInline from middle-of-params):
+  :3
+  :ToggleInline
+Expect (inlines function declaration, and removes trailing comma):
+  class Foo
+    def foo(a, b = nil, c: nil, d: bar())
+  end
+
+
+Given (un-indented/inline ruby func):
+  def foo(a, b = nil, c: nil, d: bar())
+Execute (ToggleInline from cursor-column before params defined):
+  :ToggleInline
+Expect (un-inlines function declaration):
+  def foo(
+    a,
+    b = nil,
+    c: nil,
+    d: bar()
+  )
+Execute (ToggleInline from cursor-column in middle of params definition):
+  :call cursor(1, 12)
+  :ToggleInline
+Expect (un-inlines function declaration):
+  def foo(
+    a,
+    b = nil,
+    c: nil,
+    d: bar()
+  )
+
+
+Given (indented/inline ruby func):
+  class Foo
+    def foo(a, b = nil, c: nil, d: bar())
+  end
+Execute (ToggleInline from cursor-column before params defined):
+  :1
+  :0
+  :ToggleInline
+Expect (un-inlines function declaration):
+  class Foo
+    def foo(
+      a,
+      b = nil,
+      c: nil,
+      d: bar()
+    )
+  end
+Execute (ToggleInline from cursor-column in middle of params definition):
+  :call cursor(1, 15)
+  :ToggleInline
+Expect (un-inlines function declaration):
+  class Foo
+    def foo(
+      a,
+      b = nil,
+      c: nil,
+      d: bar()
+    )
+  end
+
+
+Given (indented/inline ruby func with a method modifier):
+  class Foo
+    private def foo(a, b = nil, c: nil, d: bar())
+  end
+Execute (ToggleInline):
+  :call cursor(1, 0)
+  :ToggleInline
+Expect (un-inlines function declaration, using indent of modifier):
+  class Foo
+    private def foo(
+      a,
+      b = nil,
+      c: nil,
+      d: bar()
+    )
+  end
+
+
+Given (indented/multiline ruby func with a method modifier):
+  class Foo
+    private def foo(
+      a,
+      b = nil,
+      c: nil,
+      d: bar()
+    )
+  end
+Execute (ToggleInline):
+  :call cursor(2, 0)
+  :ToggleInline
+Expect (un-inlines function declaration, using indent of modifier):
+  class Foo
+    private def foo(a, b = nil, c: nil, d: bar())
+  end

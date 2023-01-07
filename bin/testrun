@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+EXECUTABLE="$(basename "${BASH_SOURCE[0]}")"
+PROJECTROOT="$(git rev-parse --show-toplevel)"
+
+setup_colours() {
+    fg_comment=$(tput setaf 8)
+    fg_preview=$(tput setaf 3)
+    fg_normal=$(tput sgr0)
+    fg_header=$(tput setaf 4)
+}
+
+
+show_help() {
+    setup_colours
+
+    echo "${fg_preview}${EXECUTABLE} [-i] [TESTFILE [TESTFILE...]]${fg_normal}"
+    echo
+    echo "${fg_header}DESCRIPTION:${fg_normal}"
+    echo "    runs unittests (all by default)"
+    echo
+    echo "${fg_header}ARGUMENTS:${fg_normal}"
+    echo "    -i --interactive"
+    echo "        runs vader interactively (defaults to non-interactive)"
+    echo
+    echo "${fg_header}EXAMPLES:${fg_normal}"
+    echo "    ${fg_comment}# run all tests, non-interactively${fg_normal}"
+    echo "    ./${EXECUTABLE}"
+    echo
+    echo "    ${fg_comment}# run all tests, interactively${fg_normal}"
+    echo "    ./${EXECUTABLE} -i"
+    echo
+    echo "    ${fg_comment}# run single testfile, non-interactively${fg_normal}"
+    echo "    ./${EXECUTABLE} tests/viml/test_error.vader"
+    echo
+    echo "    ${fg_comment}# run multiple testfiles, non-interactively${fg_normal}"
+    echo "    ./${EXECUTABLE} \\"
+    echo "        tests/viml/test_error.vader \\"
+    echo "        tests/viml/test_graphql.vader"
+    echo
+}
+
+
+vimrc() {
+cat <<-END
+filetype off
+set rtp+=.test_deps/vader.vim
+set rtp+=.test_deps/jellybeans.vim
+set rtp+=${PROJECTROOT}
+filetype plugin indent on
+syntax enable
+colorscheme jellybeans
+map <leader>q :q<CR>
+END
+}
+
+
+install_deps() {
+    test -d .test_deps || mkdir -p .test_deps
+    test -e .test_deps/vader.vim/.git || git clone https://github.com/junegunn/vader.vim .test_deps/vader.vim
+    test -e .test_deps/jellybeans.vim/.git || git clone https://github.com/nanotech/jellybeans.vim  .test_deps/jellybeans.vim
+}
+
+
+run_tests() {
+    args=$@
+    if test -z "${args}" ; then
+        default_tests='tests/*.vader'
+    else
+        default_tests=""
+    fi
+
+    if [[ "$interactive" == "1" ]] ; then
+        vadercmd='+Vader '
+        vadercmd+=" $default_tests"
+        nvim -Nu <(echo "$(vimrc)") "$vadercmd ${args[@]}"
+    else
+        vadercmd='Vader! '
+        vadercmd+=" $default_tests"
+        nvim -Nu <(echo "$(vimrc)") -c "$vadercmd ${args[@]}" > /dev/null
+    fi
+}
+
+
+main() {
+    interactive=0
+    args=$@
+    while [ $# -gt 0 ] ; do
+        case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -i|--interactive)
+            interactive=1
+            args=( "${args[@]/$1}" )
+            shift
+            ;;
+        *)
+            shift
+            ;;
+        esac
+    done
+
+    install_deps
+    run_tests "${args[@]}"
+}
+
+
+main "$@"

@@ -25,38 +25,49 @@ function! s:ToggleInline()
     let l:def_start_lineno = s:FindDefStartLine()
     let l:def_start_line = getline(l:def_start_lineno)
     let l:paren_open_col = matchend(l:def_start_line, s:OpenBracketRegex())
+    let l:open_bracket_ch = l:def_start_line[l:paren_open_col]
 
     let l:paren_open_coord  = [l:def_start_lineno, l:paren_open_col]
-    let l:paren_close_coord = s:FindFunctionDefEnd(l:def_start_lineno, l:paren_open_col, 0)
+    let l:paren_close_coord = s:FindFunctionDefEnd(l:def_start_lineno, l:paren_open_col, l:open_bracket_ch, 0)
 
     if l:paren_open_coord[0] != l:paren_close_coord[0]
-        call s:InlineFunction(l:paren_open_coord[0], l:paren_close_coord[0])
+        call s:InlineFunction(l:paren_open_coord[0], l:paren_close_coord[0], l:open_bracket_ch)
     else
-        call s:UnInlineFunction(l:paren_open_coord[0])
+        call s:UnInlineFunction(l:paren_open_coord[0], l:open_bracket_ch)
     endif
 endfunction
 
 
 function! s:OpenBracketRegex()
-    let l:fn_start_regex = ''
-        \ . '\([a-zA-Z0-9]\)\@<!'
-        \ . 'def [^(]\+'
+    " let l:fn_start_regex = ''
+    "     \ . '\([a-zA-Z0-9]\)\@<!'
+    "     \ . 'def [^(]\+'
 
-    let l:fn_call_regex = ''
-      \ . '\([a-zA-Z0-9]\+\)'
-      \ . '\((\)\@='
+    " let l:fn_call_regex = ''
+    "   \ . '\([a-zA-Z0-9]\+\)'
+    "   \ . '\((\)\@='
 
-    let l:def_start_regex = ''
-        \ . '\('
-        \ . l:fn_start_regex
-        \ . '\|'
-        \ . l:fn_call_regex
-        \ . '\)'
-    return l:def_start_regex
+    " let l:def_start_regex = ''
+    "     \ . '\('
+    "     \ . l:fn_start_regex
+    "     \ . '\|'
+    "     \ . l:fn_call_regex
+    "     \ . '\)'
+    " return l:def_start_regex
+
+    " let l:open_brackets = ['(', '[']
+    " return '.' . '\(' . join(l:open_brackets, '\|') . '\)\@='
+
+    let l:round_bracket = '[^(]\+' . '\((\)\@='
+    let l:square_bracket = '[^\[]\+' . '\(\[\)\@='
+    let l:curly_bracket = '[^{]\+' . '\({\)\@='
+    let l:matches = [l:round_bracket, l:square_bracket, l:curly_bracket]
+    " return '[^(]\+' . '\((\)\@='
+    return '\(' . join(l:matches, '\|') . '\)'
 endfunc
 
 
-function! s:InlineFunction(paren_open_ln, paren_close_ln)
+function! s:InlineFunction(paren_open_ln, paren_close_ln, open_bracket_ch)
     """ If function params span multiple lines, inline them so they only take one.
     "
     " Params:
@@ -78,6 +89,8 @@ function! s:InlineFunction(paren_open_ln, paren_close_ln)
     "   TO:
     "     def abc(a, b = nil, c: bar, d: foo())
     """
+    let l:closing_bracket_ch = s:ClosingBracketFor(a:open_bracket_ch)
+
     " inline params
     let l:newline = getline(a:paren_open_ln)
     for l:lineno in range(a:paren_open_ln + 1, a:paren_close_ln)
@@ -89,8 +102,8 @@ function! s:InlineFunction(paren_open_ln, paren_close_ln)
     endfor
 
     " ditch trailing comma, if present
-    if l:newline[-3:-1] == ', )'
-        let l:newline = l:newline[:-4] . ')'
+    if l:newline[-3:-1] == ', '. l:closing_bracket_ch
+        let l:newline = l:newline[:-4] . l:closing_bracket_ch
     endif
 
     " replace first line in function, and delete lines after it
@@ -99,7 +112,7 @@ function! s:InlineFunction(paren_open_ln, paren_close_ln)
 endfunc
 
 
-function! s:UnInlineFunction(lineno)
+function! s:UnInlineFunction(lineno, open_bracket_ch)
     """ If function params are all on single line,
     " split them so one param per line,
     " using configured tab settings.
@@ -127,8 +140,8 @@ function! s:UnInlineFunction(lineno)
         return 0
     endif
 
-    let l:close_paren_col = s:FindFunctionDefEnd(a:lineno, l:open_paren_col, 0)[1]
-    let l:paren_comma_cols = s:FindUnInlineNewlineCols(a:lineno, l:open_paren_col, l:close_paren_col)
+    let l:close_paren_col = s:FindFunctionDefEnd(a:lineno, l:open_paren_col, a:open_bracket_ch, 0)[1]
+    let l:paren_comma_cols = s:FindUnInlineNewlineCols(a:lineno, l:open_paren_col, l:close_paren_col, a:open_bracket_ch)
 
     " split function into 1x line/param
     let l:lines = []
@@ -194,7 +207,7 @@ function! s:FindDefParenStartCol(lineno)
 endfunc
 
 
-function! s:FindFunctionDefEnd(line_no, col_no, _parens_depth)
+function! s:FindFunctionDefEnd(line_no, col_no, open_bracket_ch, _parens_depth)
     """ Finds end of function declaration, from `line_no`, `col_no` onwards (even if it is on a lower line).
     " Typically `line_no, col_no` indicates the opening `(` of the function declaration.
     "
@@ -205,6 +218,9 @@ function! s:FindFunctionDefEnd(line_no, col_no, _parens_depth)
     "   col_no: `(ex. 0)`
     "     character's column number to start searching for 'end' from.
     "
+    "   open_bracket_ch: `(ex. '{')`
+    "     bracket whose complementing closing bracket we are looking for.
+    "
     "   _parens_depth: `(ex. 0)`
     "     Internal only, set to `0` unless you know what you are doing.
     "     Keeps track of the current `()` bracket nesting depth.
@@ -213,6 +229,7 @@ function! s:FindFunctionDefEnd(line_no, col_no, _parens_depth)
     " Returns: `[line_no, col_no]`
     "   with end of function params
     """
+    let l:closing_bracket_ch = s:ClosingBracketFor(a:open_bracket_ch)
     let l:line = getline(a:line_no)[a:col_no:]
 
     let l:parens_depth = a:_parens_depth
@@ -222,9 +239,9 @@ function! s:FindFunctionDefEnd(line_no, col_no, _parens_depth)
     for i in range(0, len(l:line))
         let l:char = l:line[i]
         if l:double_quote_active == 0 && l:single_quote_active == 0
-            if l:char == '('
+            if l:char == a:open_bracket_ch
                 let l:parens_depth += 1
-            elseif l:char == ')'
+            elseif l:char == l:closing_bracket_ch
                 let l:parens_depth -= 1
                 if l:parens_depth == 0
                     return [a:line_no, a:col_no + i]
@@ -247,14 +264,14 @@ function! s:FindFunctionDefEnd(line_no, col_no, _parens_depth)
 
     " if parens still open, recurse
     if l:parens_depth > 0
-        return s:FindFunctionDefEnd(a:line_no + 1, 0, l:parens_depth)
+        return s:FindFunctionDefEnd(a:line_no + 1, 0, a:open_bracket_ch, l:parens_depth)
     else
         return [a:line_no, a:col_no]
     endif
 endfunction
 
 
-function! s:FindUnInlineNewlineCols(lineno, open_paren_col, close_paren_col)
+function! s:FindUnInlineNewlineCols(lineno, open_paren_col, close_paren_col, open_bracket_ch)
     """ Finds col positions within an inlined function where a newline should be added.
     "
     " Params:
@@ -272,16 +289,17 @@ function! s:FindUnInlineNewlineCols(lineno, open_paren_col, close_paren_col)
     let l:double_quote_active = 0
     let l:single_quote_active = 0
     let l:paren_sep_positions = []
+    let l:closing_bracket_ch = s:ClosingBracketFor(a:open_bracket_ch)
 
     for i in range(a:open_paren_col, a:close_paren_col)
         let l:char = l:line[i]
         if l:double_quote_active == 0 && l:single_quote_active == 0
-            if l:char == '('
+            if l:char == a:open_bracket_ch
                 let l:parens_depth += 1
                 if l:parens_depth == 1
                     call add(l:paren_sep_positions, i)
                 endif
-            elseif l:char == ')'
+            elseif l:char == l:closing_bracket_ch
                 let l:parens_depth -= 1
                 if l:parens_depth == 0
                     call add(l:paren_sep_positions, i - 1)
@@ -307,6 +325,18 @@ function! s:FindUnInlineNewlineCols(lineno, open_paren_col, close_paren_col)
     return l:paren_sep_positions
 endfunc
 
+
+function! s:ClosingBracketFor(bracket_ch)
+    if a:bracket_ch == '('
+        return ')'
+    elseif a:bracket_ch == '['
+        return ']'
+    elseif a:bracket_ch == '{'
+        return '}'
+    else
+        throw E:570 " Internal Error: {function}
+    endif
+endfunc
 
 " ========
 " Commands

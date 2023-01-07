@@ -1,0 +1,14 @@
+Before (setup relevant ruby conventions):
+  set expandtab
+  set softtabstop=2
+
+Given (un-indented/multiline ruby array):
+  foo = {a: 1, b: 2, c: 3}
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  foo = {
+    a: 1,
+    b: 2,
+    c: 3
+  }

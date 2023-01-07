@@ -2,19 +2,13 @@
 vim-toggle-inline
 =================
 
-Toggles inlining of items under cursor:
+Toggles inlining of functions/collections under cursor, by parsing quotes/brackets.
+Designed to be c-family language agnostic, but here are some sample use-cases.
 
-  * function declarations -- one line per param
-  * function calls        -- one line per param
-  * TODO: python-style lists    -- one line per item
-  * TODO: python-style tuples   -- one line per item
-  * TODO: ruby-style hashes   -- one line per item
-  * TODO: would be nice to support visual-selection for inlining small parts of deeply nested hashes
-  * TODO: ruby-blocks
-  * TODO: recursive inlining
-  * TODO: sorbet 'params()' calls
-
-I've tried to make this language agnostic, at least within the C family of languages.
+  * function declarations/calls  -- toggle inline vs one-line-per-param
+  * lists/tuples/arrays          -- toggle inline vs one-line-per-item
+  * hashes/dicts                 -- toggle inline vs one-line-per-keypair
+  * nested collections/functions -- cursor-based inlining (inline/expand only inner, or outer)
 
 
 Usage
@@ -33,7 +27,6 @@ You may consider setting this to a keybinding for convenience
    nnoremap ti :ToggleInline<CR>
 
 
-
 Contributing
 ============
 
@@ -41,4 +34,17 @@ Contributing
 
    make build  # build helptags
    make test   # run tests
+
+
+Bug Reports
+===========
+
+Bugs tracking is managed by [git-bug](https://github.com/MichaelMure/git-bug). Please install.
+
+.. code-block:: bash
+
+   git bug user create # create your user
+   git bug pull        # fetch latest bugs
+   git bug webui       # show bugs
+
 

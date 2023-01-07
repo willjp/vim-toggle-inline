@@ -22,13 +22,13 @@ function! s:ToggleInline()
     "   B:
     "     def abc(a, b = nil, c: bar, d: foo())
     """
-    let l:def_start_lineno = s:FindDefStartLine()
+    let l:def_start_lineno = s:FindBracketStartLine()
     let l:def_start_line = getline(l:def_start_lineno)
     let l:paren_open_col = matchend(l:def_start_line, s:OpenBracketRegex())
     let l:open_bracket_ch = l:def_start_line[l:paren_open_col]
 
     let l:paren_open_coord  = [l:def_start_lineno, l:paren_open_col]
-    let l:paren_close_coord = s:FindFunctionDefEnd(l:def_start_lineno, l:paren_open_col, l:open_bracket_ch, 0)
+    let l:paren_close_coord = s:FindBracketEndPos(l:def_start_lineno, l:paren_open_col, l:open_bracket_ch, 0)
 
     if l:paren_open_coord[0] != l:paren_close_coord[0]
         call s:InlineFunction(l:paren_open_coord[0], l:paren_close_coord[0], l:open_bracket_ch)
@@ -38,44 +38,18 @@ function! s:ToggleInline()
 endfunction
 
 
-function! s:OpenBracketRegex()
-    " let l:fn_start_regex = ''
-    "     \ . '\([a-zA-Z0-9]\)\@<!'
-    "     \ . 'def [^(]\+'
-
-    " let l:fn_call_regex = ''
-    "   \ . '\([a-zA-Z0-9]\+\)'
-    "   \ . '\((\)\@='
-
-    " let l:def_start_regex = ''
-    "     \ . '\('
-    "     \ . l:fn_start_regex
-    "     \ . '\|'
-    "     \ . l:fn_call_regex
-    "     \ . '\)'
-    " return l:def_start_regex
-
-    " let l:open_brackets = ['(', '[']
-    " return '.' . '\(' . join(l:open_brackets, '\|') . '\)\@='
-
-    let l:round_bracket = '[^(]\+' . '\((\)\@='
-    let l:square_bracket = '[^\[]\+' . '\(\[\)\@='
-    let l:curly_bracket = '[^{]\+' . '\({\)\@='
-    let l:matches = [l:round_bracket, l:square_bracket, l:curly_bracket]
-    " return '[^(]\+' . '\((\)\@='
-    return '\(' . join(l:matches, '\|') . '\)'
-endfunc
-
-
 function! s:InlineFunction(paren_open_ln, paren_close_ln, open_bracket_ch)
     """ If function params span multiple lines, inline them so they only take one.
     "
     " Params:
-    "   paren_open_ln: `(ex. 12)`
+    "   paren_open_ln: `(ex: 12 )`
     "     line number with start of function definition
     "
-    "   paren_close_ln `(ex: 15)`
+    "   paren_close_ln: `(ex: 15 )`
     "     line number with end of function definition
+    "
+    "   open_bracket_ch: `(ex: '{' )`
+    "     the opening bracket character
     "
     " Example:
     "   FROM:
@@ -121,6 +95,9 @@ function! s:UnInlineFunction(lineno, open_bracket_ch)
     "   lineno: `(ex. 123)`
     "     line number of function declaration
     "
+    "   open_bracket_ch: `(ex: '{' )`
+    "     the opening bracket character
+    "
     " Example:
     "   FROM:
     "     def abc(a, b = nil, c: bar, d: foo())
@@ -134,13 +111,13 @@ function! s:UnInlineFunction(lineno, open_bracket_ch)
     "     )
     """
     let l:line = getline(a:lineno)
-    let l:open_paren_col = s:FindDefParenStartCol(a:lineno)
+    let l:open_paren_col = s:FindBracketStartCol(a:lineno)
     if l:open_paren_col < 0
         echom "[ERROR] not a function"
         return 0
     endif
 
-    let l:close_paren_col = s:FindFunctionDefEnd(a:lineno, l:open_paren_col, a:open_bracket_ch, 0)[1]
+    let l:close_paren_col = s:FindBracketEndPos(a:lineno, l:open_paren_col, a:open_bracket_ch, 0)[1]
     let l:paren_comma_cols = s:FindUnInlineNewlineCols(a:lineno, l:open_paren_col, l:close_paren_col, a:open_bracket_ch)
 
     " split function into 1x line/param
@@ -184,7 +161,38 @@ function! s:UnInlineFunction(lineno, open_bracket_ch)
 endfunc
 
 
-function! s:FindDefStartLine()
+function! s:OpenBracketRegex()
+    """ Returns regex for the supported opening-bracket types.
+    """
+    let l:round_bracket = '[^(]\+' . '\((\)\@='
+    let l:square_bracket = '[^\[]\+' . '\(\[\)\@='
+    let l:curly_bracket = '[^{]\+' . '\({\)\@='
+
+    let l:matches = [l:round_bracket, l:square_bracket, l:curly_bracket]
+    return '\(' . join(l:matches, '\|') . '\)'
+endfunc
+
+
+function! s:ClosingBracketFor(bracket_ch)
+    """ Returns closing bracket character for an opening bracket.
+    "
+    " Example:
+    "   call s:ClosingBracketFor('{')  " --> '}'
+    "   call s:ClosingBracketFor('[')  " --> ']'
+    """
+    if a:bracket_ch == '('
+        return ')'
+    elseif a:bracket_ch == '['
+        return ']'
+    elseif a:bracket_ch == '{'
+        return '}'
+    else
+        throw E:570 " Internal Error: {function}
+    endif
+endfunc
+
+
+function! s:FindBracketStartLine()
     """ Returns lineno of nearest function, relative to current cursor position.
     """
     if match(getline('.'), s:OpenBracketRegex()) >= 0
@@ -195,8 +203,11 @@ function! s:FindDefStartLine()
 endfunc
 
 
-function! s:FindDefParenStartCol(lineno)
-    """ Returns the position of the '(' char in a function def (start of params)
+function! s:FindBracketStartCol(lineno)
+    """ Returns the position of the open-bracket-char.
+    "
+    " Returns:
+    "   12  " column-number of opening-bracket
     """
     let l:line = getline(a:lineno)
     let l:fn_def_start_col = matchend(l:line, s:OpenBracketRegex())
@@ -207,7 +218,7 @@ function! s:FindDefParenStartCol(lineno)
 endfunc
 
 
-function! s:FindFunctionDefEnd(line_no, col_no, open_bracket_ch, _parens_depth)
+function! s:FindBracketEndPos(line_no, col_no, open_bracket_ch, _parens_depth)
     """ Finds end of function declaration, from `line_no`, `col_no` onwards (even if it is on a lower line).
     " Typically `line_no, col_no` indicates the opening `(` of the function declaration.
     "
@@ -264,7 +275,7 @@ function! s:FindFunctionDefEnd(line_no, col_no, open_bracket_ch, _parens_depth)
 
     " if parens still open, recurse
     if l:parens_depth > 0
-        return s:FindFunctionDefEnd(a:line_no + 1, 0, a:open_bracket_ch, l:parens_depth)
+        return s:FindBracketEndPos(a:line_no + 1, 0, a:open_bracket_ch, l:parens_depth)
     else
         return [a:line_no, a:col_no]
     endif
@@ -325,18 +336,6 @@ function! s:FindUnInlineNewlineCols(lineno, open_paren_col, close_paren_col, ope
     return l:paren_sep_positions
 endfunc
 
-
-function! s:ClosingBracketFor(bracket_ch)
-    if a:bracket_ch == '('
-        return ')'
-    elseif a:bracket_ch == '['
-        return ']'
-    elseif a:bracket_ch == '{'
-        return '}'
-    else
-        throw E:570 " Internal Error: {function}
-    endif
-endfunc
 
 " ========
 " Commands

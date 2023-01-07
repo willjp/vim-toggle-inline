@@ -1,0 +1,26 @@
+*vim-vim-toggle-inline.txt*          Toggle inlining function defs/calls and more
+
+Author   Will Pittman
+License  MIT
+
+================================================================================
+CONTENTS                                              *vim-toggle-inline-contents*
+================================================================================
+
+    1.Introduction.....................vim-toggle-inline-intro
+    2.Usage............................vim-toggle-inline-usage
+
+
+1. INTRODUCTION                                          *vim-toggle-inline-intro*
+================================================================================
+
+    Toggle between expressing function defs/calls as inlined vs one-param-per-line
+
+
+2. USAGE                                                 *vim-toggle-inline-usage*
+================================================================================
+>
+    :ToggleInline    " toggle inline/un-inline the function def/call under cursor
+<
+================================================================================
+vim:tw=78:et:ft=help:norl

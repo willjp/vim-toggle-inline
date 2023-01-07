@@ -113,3 +113,43 @@ Expect:
   class Foo
     foo = {"a" => 1, "b" => 2, "c" => 3}
   end
+
+
+Given (nested multiline symbol-hash):
+  foo = {
+    a: {
+      b: 123,
+      c: 456,
+    }
+  }
+Execute (ToggleInline):
+  :call cursor(3, 0)
+  :ToggleInline
+Expect:
+  foo = {
+    a: {b: 123, c: 456}
+  }
+
+
+Given (outer-hash of nested multiline symbol-hash):
+  foo = {
+    a: {
+      b: 123,
+      c: 456,
+    }
+  }
+Execute (ToggleInline):
+  :call cursor(1, 0)
+  :ToggleInline
+Expect:
+  foo = {a: {b: 123, c: 456, }}
+
+
+Given (outer-hash of nested inlined symbol-hash):
+  foo = {a: {b: 123, c: 456}}
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  foo = {
+    a: {b: 123, c: 456}
+  }

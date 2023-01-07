@@ -34,14 +34,14 @@ function! s:ToggleInline()
 endfunction
 
 
-function! s:InlineFunction(bracket_open_ln, bracket_close_ln, open_bracket_ch)
+function! s:InlineFunction(paren_open_ln, paren_close_ln, open_bracket_ch)
     """ If function params span multiple lines, inline them so they only take one.
     "
     " Params:
-    "   bracket_open_ln: `(ex: 12 )`
+    "   paren_open_ln: `(ex: 12 )`
     "     line number with start of function definition
     "
-    "   bracket_close_ln: `(ex: 15 )`
+    "   paren_close_ln: `(ex: 15 )`
     "     line number with end of function definition
     "
     "   open_bracket_ch: `(ex: '{' )`
@@ -62,8 +62,8 @@ function! s:InlineFunction(bracket_open_ln, bracket_close_ln, open_bracket_ch)
     let l:closing_bracket_ch = s:ClosingBracketFor(a:open_bracket_ch)
 
     " inline params
-    let l:newline = getline(a:bracket_open_ln)
-    for l:lineno in range(a:bracket_open_ln + 1, a:bracket_close_ln)
+    let l:newline = getline(a:paren_open_ln)
+    for l:lineno in range(a:paren_open_ln + 1, a:paren_close_ln)
         let l:ln = trim(getline(lineno))
         if l:ln[-1:-1] == ','
             let l:ln .= ' '
@@ -77,8 +77,8 @@ function! s:InlineFunction(bracket_open_ln, bracket_close_ln, open_bracket_ch)
     endif
 
     " replace first line in function, and delete lines after it
-    call setline(a:bracket_open_ln, l:newline)
-    call deletebufline(bufnr(), a:bracket_open_ln + 1, a:bracket_close_ln)
+    call setline(a:paren_open_ln, l:newline)
+    call deletebufline(bufnr(), a:paren_open_ln + 1, a:paren_close_ln)
 endfunc
 
 
@@ -107,19 +107,19 @@ function! s:UnInlineFunction(lineno, open_bracket_ch)
     "     )
     """
     let l:line = getline(a:lineno)
-    let l:open_bracket_col = s:FindBracketStartCol(a:lineno)
-    if l:open_bracket_col < 0
+    let l:open_paren_col = s:FindBracketStartCol(a:lineno)
+    if l:open_paren_col < 0
         echom "[ERROR] not a function"
         return 0
     endif
 
-    let l:close_bracket_col = s:FindBracketEndPos(a:lineno, l:open_bracket_col, a:open_bracket_ch, 0)[1]
-    let l:bracket_comma_cols = s:FindUnInlineNewlineCols(a:lineno, l:open_bracket_col, l:close_bracket_col, a:open_bracket_ch)
+    let l:close_paren_col = s:FindBracketEndPos(a:lineno, l:open_paren_col, a:open_bracket_ch, 0)[1]
+    let l:paren_comma_cols = s:FindUnInlineNewlineCols(a:lineno, l:open_paren_col, l:close_paren_col, a:open_bracket_ch)
 
     " split function/collection into 1x line/(param|item)
     let l:lines = []
     let l:last_col = -1
-    for col in l:bracket_comma_cols
+    for col in l:paren_comma_cols
         call add(l:lines, l:line[(l:last_col + 1):col])
         let last_col = col
     endfor
@@ -137,7 +137,7 @@ function! s:UnInlineFunction(lineno, open_bracket_ch)
     " set indentation for each l:lines entry
     let l:newlines = []
     call add(l:newlines, l:lines[0])
-    if 1 < len(l:lines) - 2
+    if 1 <= len(l:lines) - 2
         for i in range(1, len(l:lines) - 2)
             let indent = repeat(l:indent_char, l:indent_chars + &softtabstop)
             call add(l:newlines, indent . trim(l:lines[i]))
@@ -257,41 +257,41 @@ function! s:FindBracketEndPos(line_no, col_no, open_bracket_ch, _parens_depth)
 endfunction
 
 
-function! s:FindUnInlineNewlineCols(lineno, open_bracket_col, close_bracket_col, open_bracket_ch)
+function! s:FindUnInlineNewlineCols(lineno, open_paren_col, close_paren_col, open_bracket_ch)
     """ Finds col positions within an inlined function where a newline should be added.
     "
     " Params:
     "   lineno: `(ex. 123)`
     "     line number with inlined function
     "
-    "   open_bracket_col `(ex: 3)`
+    "   open_paren_col `(ex: 3)`
     "     column of '(' where params start being defined
     "
-    "   close_bracket_col `(ex: 8)`
+    "   close_paren_col `(ex: 8)`
     "     column of ')' where params stop being defined
     """
     let l:line = getline(a:lineno)
     let l:parens_depth = 0
     let l:double_quote_active = 0
     let l:single_quote_active = 0
-    let l:bracket_sep_positions = []
+    let l:paren_sep_positions = []
     let l:closing_bracket_ch = s:ClosingBracketFor(a:open_bracket_ch)
 
-    for i in range(a:open_bracket_col, a:close_bracket_col)
+    for i in range(a:open_paren_col, a:close_paren_col)
         let l:char = l:line[i]
         if l:double_quote_active == 0 && l:single_quote_active == 0
             if l:char == a:open_bracket_ch
                 let l:parens_depth += 1
                 if l:parens_depth == 1
-                    call add(l:bracket_sep_positions, i)
+                    call add(l:paren_sep_positions, i)
                 endif
             elseif l:char == l:closing_bracket_ch
                 let l:parens_depth -= 1
                 if l:parens_depth == 0
-                    call add(l:bracket_sep_positions, i - 1)
+                    call add(l:paren_sep_positions, i - 1)
                 endif
             elseif l:char == ',' && l:parens_depth == 1
-                call add(l:bracket_sep_positions, i)
+                call add(l:paren_sep_positions, i)
             endif
         elseif l:char == '"'
             if l:double_quote_active == 1
@@ -308,7 +308,7 @@ function! s:FindUnInlineNewlineCols(lineno, open_bracket_col, close_bracket_col,
         endif
     endfor
 
-    return l:bracket_sep_positions
+    return l:paren_sep_positions
 endfunc
 
 

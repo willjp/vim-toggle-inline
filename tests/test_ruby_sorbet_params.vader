@@ -1,0 +1,52 @@
+Given (indented/multiline ruby-sorbet params sig):
+  class Foo
+    extend T::Sig
+
+    sig { params(
+      a: String,
+      b: T.nilable(Integer)
+    ).returns(String) }
+    def foo(a, b)
+      "foo"
+    end
+  end
+
+Execute (ToggleInline):
+  :call cursor(5, 0)
+  :ToggleInline
+Expect:
+  class Foo
+    extend T::Sig
+
+    sig { params(a: String, b: T.nilable(Integer)).returns(String) }
+    def foo(a, b)
+      "foo"
+    end
+  end
+
+
+Given (indented/inlined ruby-sorbet params sig):
+  class Foo
+    extend T::Sig
+
+    sig { params(a: String, b: T.nilable(Integer)).returns(String) }
+    def foo(a, b)
+      "foo"
+    end
+  end
+Execute (ToggleInline):
+  :call cursor(4, 15)
+  :ToggleInline
+Expect:
+  class Foo
+    extend T::Sig
+
+    sig { params(
+      a: String,
+      b: T.nilable(Integer)
+    ).returns(String) }
+    def foo(a, b)
+      "foo"
+    end
+  end
+

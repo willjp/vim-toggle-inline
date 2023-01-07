@@ -34,10 +34,11 @@ You may consider setting this to a keybinding for convenience
 
 
 
-Testing
-=======
+Contributing
+============
 
 .. code-block:: bash
 
-   bin/testrun
+   make build  # build helptags
+   make test   # run tests
 

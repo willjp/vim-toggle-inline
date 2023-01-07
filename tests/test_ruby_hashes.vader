@@ -2,7 +2,8 @@ Before (setup relevant ruby conventions):
   set expandtab
   set softtabstop=2
 
-Given (un-indented/multiline ruby array):
+
+Given (un-indented/inlined ruby array):
   foo = {a: 1, b: 2, c: 3}
 Execute (ToggleInline):
   :ToggleInline
@@ -12,3 +13,47 @@ Expect:
     b: 2,
     c: 3
   }
+
+
+Given (un-indented/multiline ruby array):
+  foo = {
+    a: 1,
+    b: 2,
+    c: 3
+  }
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  foo = {a: 1, b: 2, c: 3}
+
+
+Given (indented/inlined ruby array):
+  class Foo
+    foo = {a: 1, b: 2, c: 3}
+  end
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  class Foo
+    foo = {
+      a: 1,
+      b: 2,
+      c: 3
+    }
+  end
+
+
+Given (indented/multiline ruby array):
+  class Foo
+    foo = {
+      a: 1,
+      b: 2,
+      c: 3
+    }
+  end
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  class Foo
+    foo = {a: 1, b: 2, c: 3}
+  end

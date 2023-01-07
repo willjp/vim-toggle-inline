@@ -3,57 +3,57 @@ Before (setup relevant ruby conventions):
   set softtabstop=2
 
 
-Given (un-indented/inlined ruby array):
-  foo = [123, 456, 789]
+Given (un-indented/inlined python tuple):
+  foo = (123, 456, 789)
 Execute (ToggleInline):
   :ToggleInline
 Expect:
-  foo = [
+  foo = (
     123,
     456,
     789
-  ]
+  )
 
 
-Given (un-indented/multiline ruby array):
-  foo = [
+Given (un-indented/multiline python tuple):
+  foo = (
     123,
     456,
     789,
-  ]
+  )
 Execute (ToggleInline):
   :ToggleInline
 Expect:
-  foo = [123, 456, 789]
+  foo = (123, 456, 789)
 
 
-Given (indented/inlined ruby array):
+Given (indented/inlined python tuple):
   class Foo
-    foo = [123, 456, 789]
+    foo = (123, 456, 789)
   end
 Execute (ToggleInline):
   :ToggleInline
 Expect:
   class Foo
-    foo = [
+    foo = (
       123,
       456,
       789
-    ]
+    )
   end
 
 
-Given (indented/multiline ruby array):
+Given (indented/multiline python tuple):
   class Foo
-    foo = [
+    foo = (
       123,
       456,
       789,
-    ]
+    )
   end
 Execute (ToggleInline):
   :ToggleInline
 Expect:
   class Foo
-    foo = [123, 456, 789]
+    foo = (123, 456, 789)
   end

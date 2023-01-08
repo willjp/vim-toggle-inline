@@ -10,6 +10,8 @@ Designed to be c-family language agnostic, but here are some sample use-cases.
   * hashes/dicts                 -- toggle inline vs one-line-per-keypair
   * nested collections/functions -- cursor-based inlining (inline/expand only inner, or outer)
 
+.. image:: ./media/demo.gif
+
 
 Usage
 =====

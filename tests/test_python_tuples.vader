@@ -1,6 +1,6 @@
 Before (setup relevant ruby conventions):
   set expandtab
-  set softtabstop=2
+  set softtabstop=4
 
 
 Given (un-indented/inlined python tuple):
@@ -9,17 +9,17 @@ Execute (ToggleInline):
   :ToggleInline
 Expect:
   foo = (
-    123,
-    456,
-    789
+      123,
+      456,
+      789
   )
 
 
 Given (un-indented/multiline python tuple):
   foo = (
-    123,
-    456,
-    789,
+      123,
+      456,
+      789,
   )
 Execute (ToggleInline):
   :ToggleInline
@@ -29,31 +29,31 @@ Expect:
 
 Given (indented/inlined python tuple):
   class Foo
-    foo = (123, 456, 789)
+      self.foo = (123, 456, 789)
   end
 Execute (ToggleInline):
   :ToggleInline
 Expect:
   class Foo
-    foo = (
-      123,
-      456,
-      789
-    )
+      self.foo = (
+          123,
+          456,
+          789
+      )
   end
 
 
 Given (indented/multiline python tuple):
   class Foo
-    foo = (
-      123,
-      456,
-      789,
-    )
+      self.foo = (
+        123,
+        456,
+        789,
+      )
   end
 Execute (ToggleInline):
   :ToggleInline
 Expect:
   class Foo
-    foo = (123, 456, 789)
+      self.foo = (123, 456, 789)
   end

@@ -121,7 +121,7 @@ function! s:UnInlineFunction(lineno, open_bracket_ch)
     let l:last_col = -1
     for col in l:paren_comma_cols
         call add(l:lines, l:line[(l:last_col + 1):col])
-        let last_col = col
+        let l:last_col = col
     endfor
     call add(l:lines, l:line[(l:last_col + 1):])
 
@@ -133,14 +133,18 @@ function! s:UnInlineFunction(lineno, open_bracket_ch)
 
     " determine tab char
     let l:indent_char = s:IndentChar()
+    let l:indent_width = s:IndentWidth()
 
     " set indentation for each l:lines entry
     let l:newlines = []
     call add(l:newlines, l:lines[0])
     if 1 <= len(l:lines) - 2
         for i in range(1, len(l:lines) - 2)
-            let indent = repeat(l:indent_char, l:indent_chars + &softtabstop)
-            call add(l:newlines, indent . trim(l:lines[i]))
+            let indent = repeat(l:indent_char, l:indent_chars + l:indent_width)
+            let trimmed = trim(l:lines[i])
+            if trimmed != ""
+                call add(l:newlines, indent . trim(l:lines[i]))
+            endif
         endfor
         call add(l:newlines, repeat(l:indent_char, l:indent_chars) . l:lines[-1])
     endif
@@ -316,7 +320,16 @@ function! s:IndentChar()
     if &expandtab
         return ' '
     else
-        return '\t'
+        return "	"
+    endif
+endfunc
+
+
+function! s:IndentWidth()
+    if &softtabstop <= 0
+        return 1
+    else
+        return &softtabstop
     endif
 endfunc
 

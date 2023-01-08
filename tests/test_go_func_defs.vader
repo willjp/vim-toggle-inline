@@ -1,0 +1,65 @@
+# vim: noexpandtab:softtabstop=0:tabstop=8:shiftwidth=8
+
+Before (setup relevant ruby conventions):
+  set noexpandtab
+  set softtabstop=0
+  set tabstop=8
+  set shiftwidth=8
+
+
+Given (un-indented/inlined function with named returnval):
+  func getFullName(firstname string, lastname string) (string fullname, err error) {
+  	return firstname + lastname
+  }
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  func getFullName(
+  	firstname string,
+  	lastname string
+  ) (string fullname, err error) {
+  	return firstname + lastname
+  }
+
+
+Given (un-indented/multiline function with named returnval):
+  func getFullName(
+  	firstname string,
+  	lastname string
+  ) (string fullname, err error) {
+  	return firstname + lastname
+  }
+Execute (ToggleInline):
+  :ToggleInline
+Expect:
+  func getFullName(firstname string, lastname string) (string fullname, err error) {
+  	return firstname + lastname
+  }
+
+
+Given (indented/inlined tabletest):
+  func TestFoo(t *testing.T) {
+  	tcases := []struct {
+  		name string
+  		id   int
+  	}{
+  		{ name: "is one", id: 1, },
+  		{ name: "is two", id: 2, },
+  	}
+  }
+Execute (ToggleInline mid-param):
+  :call cursor(6, 0)
+  :ToggleInline
+Expect:
+  func TestFoo(t *testing.T) {
+  	tcases := []struct {
+  		name string
+  		id   int
+  	}{
+  		{
+  			name: "is one",
+  			id: 1,
+  		},
+  		{ name: "is two", id: 2, },
+  	}
+  }

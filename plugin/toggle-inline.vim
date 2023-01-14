@@ -29,7 +29,7 @@ function! s:ToggleInline()
     if l:open_pos[0] != l:close_pos[0]
         call s:Inline(l:open_pos[0], l:close_pos[0], l:open_char)
     else
-        call s:UnInline(l:open_pos[0], l:open_char)
+        call s:UnInline(l:open_pos)
     endif
 endfunction
 
@@ -82,7 +82,7 @@ function! s:Inline(bracket_open_ln, bracket_close_ln, bracket_open_ch)
 endfunc
 
 
-function! s:UnInline(lineno, bracket_open_ch)
+function! s:UnInline(open_pos)
     """ If function params are all on single line,
     " split them so one param per line,
     " using configured tab settings.
@@ -106,15 +106,11 @@ function! s:UnInline(lineno, bracket_open_ch)
     "       d: foo()
     "     )
     """
-    let l:line = getline(a:lineno)
-    let l:bracket_open_col = s:FindBracketStartCol(a:lineno)
-    if l:bracket_open_col < 0
-        echom "[ERROR] not a function"
-        return 0
-    endif
+    let l:line = getline(a:open_pos[0])
+    let l:bracket_open_ch = l:line[a:open_pos[1]]
 
-    let l:bracket_close_col = s:FindBracketEndPos(a:lineno, l:bracket_open_col, a:bracket_open_ch, 0)[1]
-    let l:bracket_comma_cols = s:FindUnInlineNewlineCols(a:lineno, l:bracket_open_col, l:bracket_close_col, a:bracket_open_ch)
+    let l:bracket_close_col = s:FindBracketEndPos(a:open_pos[0], a:open_pos[1], l:bracket_open_ch, 0)[1]
+    let l:bracket_comma_cols = s:FindUnInlineNewlineCols(a:open_pos[0], a:open_pos[1], l:bracket_close_col, l:bracket_open_ch)
 
     " split function/collection into 1x line/(param|item)
     let l:lines = []
@@ -138,7 +134,7 @@ function! s:UnInline(lineno, bracket_open_ch)
     " set indentation for each l:lines entry
     let l:newlines = []
     call add(l:newlines, l:lines[0])
-    if 1 <= len(l:lines) - 2
+    if 1 <= len(l:lines) - 2 " indexes [0, -1] are open/close brackets
         for i in range(1, len(l:lines) - 2)
             let indent = repeat(l:indent_char, l:indent_chars + l:indent_width)
             let trimmed = trim(l:lines[i])
@@ -151,9 +147,9 @@ function! s:UnInline(lineno, bracket_open_ch)
 
     " change buffer contents
     for ln in reverse(l:newlines)
-        call appendbufline(bufnr(), a:lineno, ln)
+        call appendbufline(bufnr(), a:open_pos[0], ln)
     endfor
-    call deletebufline(bufnr(), a:lineno)
+    call deletebufline(bufnr(), a:open_pos[0])
 endfunc
 
 

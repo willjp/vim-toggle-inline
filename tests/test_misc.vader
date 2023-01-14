@@ -1,0 +1,36 @@
+# vim: noexpandtab:softtabstop=0:tabstop=8:shiftwidth=8
+
+Before (setup relevant ruby conventions):
+  set noexpandtab
+  set softtabstop=0
+  set tabstop=8
+  set shiftwidth=8
+
+Given (code with multiline nested open-brackets):
+  for _, tcase := range tcases {
+  	t.Run(tcase.name, func(t *testing.T) {
+  		if tcase.id == 0 {
+  			t.Errorf("Failed because reasons..")
+  		}
+  	})
+  }
+Execute (ToggleInline within innermost curlybrackets):
+  :call cursor(3, 15)
+  :ToggleInline
+Expect:
+  for _, tcase := range tcases {
+  	t.Run(tcase.name, func(t *testing.T) {
+  		if tcase.id == 0 {t.Errorf("Failed because reasons..")}
+  	})
+  }
+
+
+Given (code with inlined nested open-brackets):
+  for _, tcase := range tcases {t.Run(tcase.name, func(t *testing.T) {if tcase.id == 0 {t.Errorf("Failed because reasons..")}})}
+Execute (ToggleInline within innermost curlybrackets):
+  :call cursor(1, 90)
+  :ToggleInline
+Expect:
+  for _, tcase := range tcases {t.Run(tcase.name, func(t *testing.T) {if tcase.id == 0 {
+  	t.Errorf("Failed because reasons..")
+  }})}

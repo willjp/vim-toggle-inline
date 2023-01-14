@@ -32,6 +32,7 @@ Given (indented/inlined python tuple):
       self.foo = (123, 456, 789)
   end
 Execute (ToggleInline):
+  :call cursor(2, 0)
   :ToggleInline
 Expect:
   class Foo
@@ -52,6 +53,7 @@ Given (indented/multiline python tuple):
       )
   end
 Execute (ToggleInline):
+  :call cursor(2, 0)
   :ToggleInline
 Expect:
   class Foo

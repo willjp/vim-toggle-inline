@@ -32,6 +32,7 @@ Given (indented/inlined ruby array):
     foo = [123, 456, 789]
   end
 Execute (ToggleInline):
+  :call cursor(2, 0)
   :ToggleInline
 Expect:
   class Foo

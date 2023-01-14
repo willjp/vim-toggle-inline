@@ -32,6 +32,7 @@ Given (indented/inlined ruby symbol-hash):
     foo = {a: 1, b: 2, c: 3}
   end
 Execute (ToggleInline):
+  :call cursor(2, 0)
   :ToggleInline
 Expect:
   class Foo
@@ -88,6 +89,7 @@ Given (indented/inlined ruby arrow-hash):
     foo = {"a" => 1, "b" => 2, "c" => 3}
   end
 Execute (ToggleInline):
+  :call cursor(2, 0)
   :ToggleInline
 Expect:
   class Foo

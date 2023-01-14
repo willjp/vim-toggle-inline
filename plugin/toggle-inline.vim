@@ -22,15 +22,33 @@ function! s:ToggleInline()
     "   B:
     "     def abc(a, b = nil, c: bar, d: foo())
     """
-    let l:open_pos = s:FindBracketStartPos()
-    let l:open_char = getline(l:open_pos[0])[l:open_pos[1]]
-    let l:close_pos = s:FindBracketEndPos(l:open_pos[0], l:open_pos[1], l:open_char, 0)
 
-    if l:open_pos[0] != l:close_pos[0]
-        call s:Inline(l:open_pos[0], l:close_pos[0], l:open_char)
+    " find open-bracket on current-line
+    let l:open_pos = s:FindCurLineBracketStartPos()
+
+    " open-bracket on current-line
+    if l:open_pos != [-1, -1]
+        let l:open_char = getline(l:open_pos[0])[l:open_pos[1]]
+        let l:close_pos = s:FindBracketEndPos(l:open_pos[0], l:open_pos[1], l:open_char, 0)
+
+        if l:open_pos[0] == l:close_pos[0]
+            call s:UnInline(l:open_pos)
+        else
+            call s:Inline(l:open_pos[0], l:close_pos[0], l:open_char)
+        endif
+        return
+
+    " open-bracket is not on current-line, must be multiline
     else
-        call s:UnInline(l:open_pos)
+        let l:open_pos = s:FindMultilineBracketStartPos()
+        let l:open_char = getline(l:open_pos[0])[l:open_pos[1]]
+        let l:close_pos = s:FindBracketEndPos(l:open_pos[0], l:open_pos[1], l:open_char, 0)
+        call s:Inline(l:open_pos[0], l:close_pos[0], l:open_char)
+        return
     endif
+
+    echom "[ERROR] cursor not within function/collection"
+    return
 endfunction
 
 
@@ -153,8 +171,8 @@ function! s:UnInline(open_pos)
 endfunc
 
 
-function! s:OpenBracketRegex()
-    """ Returns regex for the supported opening-bracket types.
+function! s:UntilOpenBracketRegex()
+    """ Returns regex all characters UNTIL opening bracket.
     """
     let l:round_bracket = '[^(]\+' . '\((\)\@='
     let l:square_bracket = '[^\[]\+' . '\(\[\)\@='
@@ -163,6 +181,16 @@ function! s:OpenBracketRegex()
     let l:matches = [l:round_bracket, l:square_bracket, l:curly_bracket]
     return '\(' . join(l:matches, '\|') . '\)'
 endfunc
+
+
+function! s:OpenBracketRegex()
+    let l:round_bracket = '('
+    let l:square_bracket = '\['
+    let l:curly_bracket = '{'
+
+    let l:matches = [l:round_bracket, l:square_bracket, l:curly_bracket]
+    return '\(' . join(l:matches, '\|') . '\)'
+endfunction
 
 
 function! s:ClosingBracketFor(bracket_ch)
@@ -179,18 +207,44 @@ function! s:ClosingBracketFor(bracket_ch)
     elseif a:bracket_ch == '{'
         return '}'
     else
-        throw E:570 " Internal Error: {function}
+        throw 570 " Internal Error: {function}
     endif
 endfunc
 
 
-function! s:FindBracketStartPos()
-    """ Returns (x,y) of opening-bracket.
+function! s:FindCurLineBracketStartPos()
+    """ Returns (x,y) of opening-bracket, when cursor is within an inline bracket open/close
+    """
+    let l:pos = [line('.'), col('.')]
+    let l:line = getline('.')
+
+    let l:ln_before = l:line[:l:pos[1]]
+    let l:ln_after = l:line[l:pos[1]:]
+
+    " match before cursor
+    let l:match_col = s:LastMatch(l:ln_before, s:OpenBracketRegex())
+    if l:match_col >= 0
+        return [l:pos[0], l:match_col]
+    endif
+
+    " match after cursor
+    let l:match_col = match(l:ln_after, s:OpenBracketRegex())
+    if l:match_col >= 0
+        return [l:pos[0], l:match_col + len(l:ln_before) - 1]
+    endif
+
+    " no match
+    return [-1, -1]
+endfunc
+
+
+function s:FindMultilineBracketStartPos()
+    """ Returns (x,y) of opening-bracket, when cursor is within a multiline bracket open/close
     """
     let l:lineno = s:FindBracketStartLine()
     let l:col = s:FindBracketStartCol(l:lineno)
     return [l:lineno, l:col]
-endfunc
+endfunction
 
 
 function! s:FindBracketEndPos(line_no, col_no, bracket_open_ch, _parens_depth)
@@ -333,10 +387,10 @@ endfunc
 function! s:FindBracketStartLine()
     """ Returns lineno of nearest function, relative to current cursor position.
     """
-    if match(getline('.'), s:OpenBracketRegex()) >= 0
+    if match(getline('.'), s:UntilOpenBracketRegex()) >= 0
         return line('.')
     else
-        return search(s:OpenBracketRegex(), 'b')
+        return search(s:UntilOpenBracketRegex(), 'b')
     endif
 endfunc
 
@@ -348,11 +402,31 @@ function! s:FindBracketStartCol(lineno)
     "   12  " column-number of opening-bracket
     """
     let l:line = getline(a:lineno)
-    let l:fn_def_start_col = matchend(l:line, s:OpenBracketRegex())
+    let l:fn_def_start_col = matchend(l:line, s:UntilOpenBracketRegex())
     if l:fn_def_start_col == -1
         return -1
     endif
     return l:fn_def_start_col
+endfunc
+
+
+function! s:LastMatch(line, pattern)
+    """ Returns last match within line.
+    " returns -1 if no match
+    """
+    let l:match_col = -1
+    let l:last_match_col = -1
+    let l:match_no = 1
+    while v:true
+        let l:match_col = match(a:line, a:pattern, 0, l:match_no)
+        if l:match_col < 0
+            return l:last_match_col
+        endif
+        let l:last_match_col = l:match_col
+        let l:match_no += 1
+    endwhile
+
+    return l:last_match_col
 endfunc
 
 

@@ -74,8 +74,7 @@ Given (indented/inline ruby func):
     def foo(a, b = nil, c: nil, d: bar())
   end
 Execute (ToggleInline from cursor-column before params defined):
-  :1
-  :0
+  :call cursor(2, 0)
   :ToggleInline
 Expect:
   class Foo
@@ -87,7 +86,7 @@ Expect:
     )
   end
 Execute (ToggleInline from cursor-column in middle of params definition):
-  :call cursor(1, 15)
+  :call cursor(2, 15)
   :ToggleInline
 Expect:
   class Foo
@@ -105,7 +104,7 @@ Given (indented/inline ruby func with a method modifier):
     private def foo(a, b = nil, c: nil, d: bar())
   end
 Execute (ToggleInline):
-  :call cursor(1, 0)
+  :call cursor(2, 0)
   :ToggleInline
 Expect:
   class Foo
